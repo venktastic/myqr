@@ -193,7 +193,7 @@ export default function Page() {
             <CardHeader>
               <CardTitle className="text-2xl">MyQR</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Instantly create a crisp QR code with your custom image.
+                Instantly create a crisp QR code with your logo.
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
