@@ -1,8 +1,8 @@
 "use client";
-"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
+// Types for 'qrcode' come from @types/qrcode
+import * as QRCode from "qrcode";
 import { motion } from "framer-motion";
 import { Download, ImagePlus, Copy, RefreshCw, Trash2 } from "lucide-react";
 
@@ -12,10 +12,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// rounded-rect helper
-function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+type Ecl = "L" | "M" | "Q" | "H";
+
+function roundRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
   const radius = Math.max(0, Math.min(r, Math.min(w, h) / 2));
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
@@ -30,7 +44,7 @@ export default function Page() {
   const [text, setText] = useState("https://example.com");
   const [size, setSize] = useState(512);
   const [margin, setMargin] = useState(16);
-  const [ecl, setEcl] = useState<"L" | "M" | "Q" | "H">("H");
+  const [ecl, setEcl] = useState<Ecl>("H");
 
   const [fgColor, setFgColor] = useState("#000000");
   const [bgColor, setBgColor] = useState("#ffffff");
@@ -57,7 +71,9 @@ export default function Page() {
       color: { dark: fgColor, light: bgColor },
     });
 
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     const centerX = Math.floor((size - logoSide) / 2);
     const centerY = Math.floor((size - logoSide) / 2);
 
@@ -110,14 +126,14 @@ export default function Page() {
   }
 
   useEffect(() => {
-    draw();
+    void draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, size, margin, ecl, fgColor, bgColor, logoDataUrl, logoPct, knockoutPct, rounded, showGuide]);
 
-  function handleLogoFile(file?: File) {
+  function handleLogoFile(file?: File | null) {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => setLogoDataUrl(String(e.target?.result));
+    reader.onload = (e) => setLogoDataUrl(String(e.target?.result ?? ""));
     reader.readAsDataURL(file);
   }
 
@@ -134,23 +150,23 @@ export default function Page() {
   function copyPNG() {
     const canvas = canvasRef.current;
     if (!canvas) return;
-  
+
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       try {
-        // Feature-detect ClipboardItem without using `any`
+        // Safe feature-detect without `any`
         const CI = (globalThis as unknown as {
           ClipboardItem?: new (items: Record<string, Blob>) => ClipboardItem;
         }).ClipboardItem;
-  
+
         if (navigator.clipboard && CI) {
-          await navigator.clipboard.write([new CI({ 'image/png': blob })]);
-          alert('PNG copied to clipboard ✅');
+          await navigator.clipboard.write([new CI({ "image/png": blob })]);
+          alert("PNG copied to clipboard ✅");
         } else {
-          throw new Error('Clipboard images not supported');
+          throw new Error("Clipboard images not supported");
         }
       } catch {
-        alert('Copy failed. Try download instead.');
+        alert("Copy failed. Try download instead.");
       }
     });
   }
@@ -176,7 +192,9 @@ export default function Page() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">MyQR</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Instantly create a crisp QR code with a custom image.</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Instantly create a crisp QR code with your custom image.
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -204,7 +222,7 @@ export default function Page() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Error Correction</Label>
-                  <Select value={ecl} onValueChange={(v) => setEcl(v as 'L' | 'M' | 'Q' | 'H')}>
+                  <Select value={ecl} onValueChange={(v) => setEcl(v as Ecl)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="L">L (7%)</SelectItem>
@@ -287,7 +305,7 @@ export default function Page() {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <Card className="sticky top-6 shadow-xl">
             <CardHeader><CardTitle className="text-xl">Live Preview</CardTitle></CardHeader>
-            <CardContent>
+          <CardContent>
               <div className="w-full flex items-center justify-center p-4">
                 <canvas ref={canvasRef} width={size} height={size} className="rounded-2xl shadow border" aria-label="QR preview" />
               </div>
