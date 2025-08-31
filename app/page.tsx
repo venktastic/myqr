@@ -41,7 +41,7 @@ function roundRectPath(
 }
 
 export default function Page() {
-  const [text, setText] = useState("https://example.com");
+  const [text, setText] = useState("");
   const [size, setSize] = useState(512);
   const [margin, setMargin] = useState(16);
   const [ecl, setEcl] = useState<Ecl>("H");
@@ -172,7 +172,7 @@ export default function Page() {
   }
 
   function resetAll() {
-    setText("https://example.com");
+    setText("");
     setSize(512);
     setMargin(16);
     setEcl("H");
@@ -199,7 +199,14 @@ export default function Page() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="text">Text / URL</Label>
-                <Input id="text" placeholder="Paste any text or link" value={text} onChange={(e) => setText(e.target.value)} />
+                <Input
+  id="text"
+  placeholder="Paste any text or link"
+  value={text}
+  onChange={(e) => setText(e.target.value)}
+  onFocus={(e) => e.target.select()}
+  autoFocus
+/>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
