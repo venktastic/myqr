@@ -134,13 +134,23 @@ export default function Page() {
   function copyPNG() {
     const canvas = canvasRef.current;
     if (!canvas) return;
+  
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       try {
-        await navigator.clipboard.write([new (window as any).ClipboardItem({ "image/png": blob })]);
-        alert("PNG copied to clipboard ✅");
+        // Feature-detect ClipboardItem without using `any`
+        const CI = (globalThis as unknown as {
+          ClipboardItem?: new (items: Record<string, Blob>) => ClipboardItem;
+        }).ClipboardItem;
+  
+        if (navigator.clipboard && CI) {
+          await navigator.clipboard.write([new CI({ 'image/png': blob })]);
+          alert('PNG copied to clipboard ✅');
+        } else {
+          throw new Error('Clipboard images not supported');
+        }
       } catch {
-        alert("Copy failed. Try download instead.");
+        alert('Copy failed. Try download instead.');
       }
     });
   }
@@ -165,8 +175,8 @@ export default function Page() {
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl">QR Code + Center Logo</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">High-EC (error correction) QR with a clean white knockout so your logo stays crisp.</p>
+              <CardTitle className="text-2xl">MyQR</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">Instantly create a crisp QR code with a custom image.</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -194,7 +204,7 @@ export default function Page() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Error Correction</Label>
-                  <Select value={ecl} onValueChange={(v) => setEcl(v as any)}>
+                  <Select value={ecl} onValueChange={(v) => setEcl(v as 'L' | 'M' | 'Q' | 'H')}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="L">L (7%)</SelectItem>
